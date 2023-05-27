@@ -50,6 +50,7 @@ enum ProtoDataType {
 
 int GeneralReaderOp::inference() {
   // read request from client
+  LOG(INFO) << "GeneralReaderOp here0";
   const Request *req = dynamic_cast<const Request *>(get_request_message());
   if (!req) {
     LOG(ERROR) << "Failed get request message";
@@ -177,7 +178,7 @@ int GeneralReaderOp::inference() {
                 << "]=" << tensor.lod(k);
       }
     }
-
+    LOG(INFO) << "GeneralReaderOp here1";
     for (int k = 0; k < tensor.shape_size(); ++k) {
       int dim = tensor.shape(k);
       VLOG(2) << "(logid=" << log_id << ") shape for var[" << i << "]: " << dim;
@@ -186,7 +187,7 @@ int GeneralReaderOp::inference() {
     paddleTensor.name = tensor.name();
     out->push_back(paddleTensor);
 
-    VLOG(2) << "(logid=" << log_id << ") tensor size for var[" << i
+    LOG(INFO) << "(logid=" << log_id << ") tensor size for var[" << i
             << "]: " << data_len;
     databuf_size = data_len * elem_size;
     void *databuf_char = MempoolWrapper::instance().malloc(databuf_size);

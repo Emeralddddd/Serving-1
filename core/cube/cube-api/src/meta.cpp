@@ -137,6 +137,7 @@ MetaInfo* Meta::create_meta(const BUTIL_RAPIDJSON_NAMESPACE::Value& config) {
   info->dict_name = config["dict_name"].GetString();
   info->shard_num = config["shard"].GetInt();
   info->dup_num = config["dup"].GetInt();
+  info->partition_path = config["partition_path"].GetString();
 
   int timeout = config["timeout"].GetInt();
   int retry = config["retry"].GetInt();

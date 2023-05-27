@@ -23,6 +23,7 @@
   gettimeofday(&(flag), NULL);
 
 DEFINE_string(config_file, "./cube.conf", "m-cube config file");
+DEFINE_string(partition_file, "./partition", "m-cube keys partition file");
 DEFINE_string(keys, "keys", "keys to seek");
 DEFINE_string(dict, "dict", "dict to seek");
 DEFINE_uint64(batch, 500, "batch size");
@@ -34,7 +35,7 @@ std::atomic<int> g_concurrency(0);
 
 std::vector<std::vector<uint64_t>> time_list;
 std::vector<uint64_t> request_list;
-int turns = 1000;
+int turns = 10000;
 
 namespace {
 inline uint64_t time_diff(const struct timeval& start_time,
@@ -92,6 +93,20 @@ int run(int argc, char** argv, int thread_id) {
     key_list.push_back(std::stoll(line));
   }
 
+  std::unordered_map<uint64_t, uint64_t> keys2server;
+  std::ifstream afile(FLAGS_partition_file);
+  if (!afile.is_open()) {
+    LOG(ERROR) << "open conf file [" << FLAGS_partition_file << "]";
+    return -1;
+  }
+  while (!afile.eof()) {
+      uint64_t data;
+      uint64_t part;
+      afile >> data;
+      afile >> part;
+      keys2server[data] = part;
+  }
+
   uint64_t file_size = key_list.size();
   uint64_t index = 0;
   uint64_t request = 0;
@@ -109,7 +124,7 @@ int run(int argc, char** argv, int thread_id) {
     int ret = 0;
     if (keys.size() >= FLAGS_batch) {
       TIME_FLAG(seek_start);
-      ret = cube->seek(FLAGS_dict, keys, &values);
+      ret = cube->seek(FLAGS_dict, keys, &values, keys2server);
       TIME_FLAG(seek_end);
       request += 1;
       if (ret != 0) {
@@ -193,7 +208,7 @@ int run_m(int argc, char** argv) {
       << "\n99.9 percent: "
       << std::to_string(all_time_list[static_cast<int>(0.999 * request_num)])
       << "\ntotal_request: " << std::to_string(request_num) << "\nspeed: "
-      << std::to_string(turns * 1000000 / main_time)  // mean_time us
+      << std::to_string(thread_num * turns * 1000000 / main_time)  // mean_time us
       << " query per second";
   return 0;
 }

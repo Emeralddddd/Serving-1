@@ -167,6 +167,7 @@ int Op::process(const uint64_t log_id, bool debug) {
   op_time.stop();
   PredictorMetric::GetInstance()->update_latency_metric(
       OP_METRIC_PREFIX + full_name(), op_time.u_elapsed());
+  // LOG(INFO) << "op process here";
   LOG(INFO) << "(logid=" << log_id << ") " << name() << "_time=["
             << op_time.u_elapsed() << "]";
   return ERR_OK;

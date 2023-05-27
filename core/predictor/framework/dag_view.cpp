@@ -180,13 +180,16 @@ int DagView::execute_one_stage(ViewStage* vstage,
   butil::Timer stage_time(butil::Timer::STARTED);
   uint32_t node_size = vstage->nodes.size();
   VLOG(2) << "(logid=" << log_id << ") vstage->nodes.size(): " << node_size;
+  LOG(INFO) << "here DagView::execute_one_stage";
   for (uint32_t ni = 0; ni < node_size; ni++) {
     ViewNode* vnode = vstage->nodes[ni];
     DagNode* conf = vnode->conf;
     Op* op = vnode->op;
+    LOG(INFO) << "1 DagView::execute_one_stage";
     TRACEPRINTF(
         "(logid=%" PRIu64 ") start to execute op[%s]", log_id, op->name());
     int errcode = op->process(log_id, debug_os != NULL);
+    LOG(INFO) << "2DagView::execute_one_stage";
     TRACEPRINTF(
         "(logid=%" PRIu64 ") finish to execute op[%s]", log_id, op->name());
     if (errcode < 0) {
@@ -254,6 +257,7 @@ void* call_back(void* ori_args) {
   Op* op = static_cast<Op*>(args->_op);
   uint64_t log_id = static_cast<uint64_t>(args->_log_id);
   bool debug = static_cast<bool>(args->_debug);
+  LOG(INFO) << "dag view call_back";
   args->errcode = op->process(log_id, debug);
   return nullptr;
 }

@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #ifdef BCLOUD
 #include "baidu/rpc/server.h"
@@ -77,6 +78,11 @@ class CubeAPI {
            const std::vector<uint64_t>& keys,
            std::vector<CubeValue>* vals);
 
+  int seek(const std::string& dict_name,
+           const std::vector<uint64_t>& keys,
+           std::vector<CubeValue>* vals,
+           std::unordered_map<uint64_t, uint64_t> keys2server);
+
   int opt_seek(const std::string& dict_name,
                const std::vector<uint64_t>& keys,
                std::function<void(DictValue*, size_t)> parse);
@@ -105,6 +111,7 @@ class CubeAPI {
    *
    */
   std::vector<std::string> get_table_names();
+  std::vector<std::string> get_partition_paths();
 
  public:
   static const char* error_msg(int error_code);

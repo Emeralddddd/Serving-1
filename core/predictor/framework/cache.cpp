@@ -84,7 +84,7 @@ int CubeCache::reload_data(const std::string& cache_path) {
         reader.close();
         continue;
       }
-
+      int i=0;
       Record record(reader.get_header());
       while (reader.next(&record) == 0) {
         uint64_t key =
@@ -101,8 +101,9 @@ int CubeCache::reload_data(const std::string& cache_path) {
         new_value->error = 0;
         new_value->buff.swap(record.value);
         _map_cache.insert(std::make_pair(key, new_value));
+        i++;
       }
-
+      LOG(WARNING) << "Load cube cache size " << i << ".";
       LOG(WARNING) << "Load cube cache file " << dirp->d_name << " done.";
     }
     LOG(WARNING) << "Load all cube cache files done";

@@ -32,7 +32,7 @@ int SequenceFileRecordReader::close() {
   return 0;
 }
 int SequenceFileRecordReader::next(Record* record) {
-  uint32_t record_len = 0;
+  int32_t record_len = 0;
   int64_t ret = _raw_reader->read(&record_len);
   if (ret == 0) {
     return 1;  // ?????1???????????????
@@ -42,7 +42,9 @@ int SequenceFileRecordReader::next(Record* record) {
                << ", errmsg:" << _raw_reader->errno_to_str(ret);
     return -1;
   }
-  record->record_len = static_cast<int>(ntohl(record_len));
+  // record->record_len = static_cast<int>(ntohl(record_len));
+  record->record_len = record_len;
+  LOG(INFO) << "record->record_len:" << record->record_len;
   // got marker
   if (record->record_len == -1) {
     std::string marker;
@@ -66,16 +68,19 @@ int SequenceFileRecordReader::next(Record* record) {
     }
     record->record_len = static_cast<int>(ntohl(record->record_len));
   }
-  uint32_t key_len = 0;
+  int32_t key_len = 0;
   if ((ret = _raw_reader->read(&key_len)) != sizeof(key_len)) {
     LOG(ERROR) << "read sequence file:" << _path
                << " record(key_len) errno:" << ret
                << ", errmsg:" << _raw_reader->errno_to_str(ret);
     return -1;
   }
-  record->key_len = static_cast<int>(ntohl(key_len));
+  // record->key_len = static_cast<int>(ntohl(key_len));
+  record->key_len = key_len;
+  LOG(INFO) << "record->key_len:" << record->key_len;
   if ((ret = _raw_reader->read_buf(&record->key, record->key_len)) !=
       record->key_len) {
+    LOG(WARNING) << "read_buf:" << _raw_reader->read_buf(&record->key, record->key_len);
     LOG(ERROR) << "read sequence file:" << _path
                << " record(key_len) errno:" << ret
                << ", errmsg:" << _raw_reader->errno_to_str(ret);
@@ -143,7 +148,12 @@ int SequenceFileRecordReader::read_header() {
     LOG(ERROR) << "read sequence file header(sync_marker) error:" << _path;
     return -1;
   }
-
+  LOG(INFO) << "header version:" << _header.version;
+  LOG(INFO) << "_header.key_class:" << _header.key_class;
+  LOG(INFO) << "_header.value_class:" << _header.value_class;
+  LOG(INFO) << "_header.is_compress:" << _header.is_compress;
+  LOG(INFO) << "_header.is_block_compress:" << _header.is_block_compress;
+  LOG(INFO) << "meta_cnt:" << meta_cnt;
   LOG(INFO) << "sync_marker:" << _header.sync_marker;
   LOG(INFO) << "read sequence file header ok:" << _path;
   return 0;

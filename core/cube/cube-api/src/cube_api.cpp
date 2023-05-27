@@ -309,6 +309,137 @@ int CubeAPI::seek(const std::string& dict_name,
   return ret;
 }
 
+int CubeAPI::seek(const std::string& dict_name,
+                  const std::vector<uint64_t>& keys,
+                  std::vector<CubeValue>* vals,
+                  std::unordered_map<uint64_t, uint64_t> keys2server) {
+  // Meta* meta = Meta::instance();
+  if (_meta == NULL) {
+    LOG(ERROR) << "seek, meta is null";
+    return -1;
+  }
+  
+  MetaInfo* info = _meta->get_meta(dict_name);
+
+  if (info == NULL) {
+    LOG(ERROR) << "get meta [" << dict_name << "] failed";
+    return -1;
+  }
+
+  int shard_num = info->shard_num;
+
+  DictRpcData* rpc_data =
+      static_cast<DictRpcData*>(bthread_getspecific(_tls_key));
+
+  if (rpc_data == NULL) {
+    rpc_data = new DictRpcData;
+    CHECK_EQ(0, bthread_setspecific(_tls_key, rpc_data));
+  }
+
+  rpc_data->sub_reqs.resize(shard_num);
+  rpc_data->sub_res.resize(shard_num);
+
+  std::vector<std::vector<int>> offset;
+  offset.resize(shard_num);
+  int init_cnt = keys.size() * 2 / shard_num;
+
+  for (int i = 0; i < shard_num; ++i) {
+    offset[i].reserve(init_cnt);
+  }
+
+  for (size_t i = 0; i < keys.size(); ++i) {
+    uint64_t shard_id = 0;
+    if (keys2server.find(keys[i]) != keys2server.end()) {
+      shard_id = keys2server[keys[i]];
+    }
+    // uint64_t shard_id = keys2server[keys[i]];
+    rpc_data->sub_reqs[shard_id].add_keys(keys[i]);
+    offset[shard_id].push_back(i);
+  }
+
+  std::vector<DictService_Stub*> stubs(shard_num);
+  std::vector<brpc::Controller*> cntls(shard_num);
+
+  for (int i = 0; i < shard_num; ++i) {
+    ::brpc::Channel* chan = info->cube_conn[i];
+    stubs[i] = new DictService_Stub(chan);
+    cntls[i] = new ::brpc::Controller();
+  }
+
+  DoNothing do_nothing;
+
+  for (int i = 0; i < shard_num; ++i) {
+    stubs[i]->seek(
+        cntls[i], &rpc_data->sub_reqs[i], &rpc_data->sub_res[i], &do_nothing);
+  }
+
+  int cntls_failed_cnt = 0;
+
+  for (int i = 0; i < shard_num; ++i) {
+    brpc::Join(cntls[i]->call_id());
+
+    if (cntls[i]->Failed()) {
+      ++cntls_failed_cnt;
+      LOG(WARNING) << "cube seek from shard [" << i << "] failed ["
+                   << cntls[i]->ErrorText() << "]";
+    }
+  }
+
+  int ret = CubeError::E_OK;
+
+  info->cube_request_num << 1;
+
+  if (cntls_failed_cnt > 0) {
+    info->cube_rpcfail_num << 1;
+    if (cntls_failed_cnt == shard_num) {
+      ret = CubeError::E_ALL_SEEK_FAILED;
+    } else {
+      ret = CubeError::E_SEEK_FAILED;
+    }
+  }
+
+  vals->resize(keys.size());
+
+  // merge
+  size_t miss_cnt = 0;
+  for (int i = 0; i < shard_num; ++i) {
+    if (cntls[i]->Failed()) {
+      for (int j = 0; j < rpc_data->sub_res[i].values().size(); ++j) {
+        (*vals)[offset[i][j]].error = CubeError::E_SEEK_FAILED;
+        (*vals)[offset[i][j]].buff.assign("");
+      }
+    } else {
+      for (int j = 0; j < rpc_data->sub_res[i].values().size(); ++j) {
+        DictValue* val = rpc_data->sub_res[i].mutable_values(j);
+        if (static_cast<int>(val->status()) == CubeError::E_NO_SUCH_KEY) {
+          miss_cnt += 1;
+        }
+        (*vals)[offset[i][j]].error = val->status();
+        (*vals)[offset[i][j]].buff.swap(*val->mutable_value());
+      }
+    }
+  }
+
+  // bvar stats
+  g_cube_keys_num << keys.size();
+  if (keys.size() > 0) {
+    g_cube_keys_miss_num << miss_cnt;
+    g_cube_value_size << (*vals)[0].buff.size();
+  }
+
+  // cleanup
+  for (int i = 0; i < shard_num; ++i) {
+    delete stubs[i];
+    stubs[i] = NULL;
+    delete cntls[i];
+    cntls[i] = NULL;
+    rpc_data->sub_reqs[i].Clear();
+    rpc_data->sub_res[i].Clear();
+  }
+
+  return ret;
+}
+
 int CubeAPI::opt_seek(const std::string& dict_name,
                       const std::vector<uint64_t>& keys,
                       std::function<void(DictValue*, size_t)> parse) {
@@ -690,5 +821,15 @@ std::vector<std::string> CubeAPI::get_table_names() {
   }
   return table_names;
 }
+
+std::vector<std::string> CubeAPI::get_partition_paths() {
+  const std::vector<const MetaInfo*> metas = _meta->metas();
+  std::vector<std::string> partition_paths;
+  for (auto itr = metas.begin(); itr != metas.end(); ++itr) {
+    partition_paths.push_back((*itr)->partition_path);
+  }
+  return partition_paths;
+}
+
 }  // namespace mcube
 }  // namespace rec

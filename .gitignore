@@ -1,4 +1,5 @@
-build
+build*
+.vscode
 .baidu*
 .bcloud*
 output

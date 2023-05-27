@@ -1,0 +1,189 @@
+feed_var {
+  name: "C20"
+  alias_name: "sparse_19"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C19"
+  alias_name: "sparse_18"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C16"
+  alias_name: "sparse_15"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C15"
+  alias_name: "sparse_14"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C18"
+  alias_name: "sparse_17"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C17"
+  alias_name: "sparse_16"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C12"
+  alias_name: "sparse_11"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C11"
+  alias_name: "sparse_10"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C14"
+  alias_name: "sparse_13"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C13"
+  alias_name: "sparse_12"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C6"
+  alias_name: "sparse_5"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C5"
+  alias_name: "sparse_4"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C8"
+  alias_name: "sparse_7"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C7"
+  alias_name: "sparse_6"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C2"
+  alias_name: "sparse_1"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C1"
+  alias_name: "sparse_0"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C4"
+  alias_name: "sparse_3"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C3"
+  alias_name: "sparse_2"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C10"
+  alias_name: "sparse_9"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C9"
+  alias_name: "sparse_8"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C25"
+  alias_name: "sparse_24"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C26"
+  alias_name: "sparse_25"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C21"
+  alias_name: "sparse_20"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C22"
+  alias_name: "sparse_21"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C23"
+  alias_name: "sparse_22"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+feed_var {
+  name: "C24"
+  alias_name: "sparse_23"
+  is_lod_tensor: true
+  feed_type: 0
+  shape: -1
+}
+fetch_var {
+  name: "fc_3.tmp_2"
+  alias_name: "prob"
+  is_lod_tensor: false
+  fetch_type: 1
+  shape: 2
+}

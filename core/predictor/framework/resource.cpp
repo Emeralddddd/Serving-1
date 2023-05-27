@@ -209,6 +209,7 @@ int Resource::general_model_initialize(const std::string& path,
   }
   VLOG(2) << "general model path: " << path;
   VLOG(2) << "general model file: " << file;
+  // LOG(INFO) << "init cube by config file : " << this->_cube_config_fullpath;
   if (!FLAGS_enable_general_model) {
     LOG(ERROR) << "general model is not enabled";
     return -1;

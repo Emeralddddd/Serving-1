@@ -134,6 +134,7 @@ int GeneralDistKVInferOp::inference() {
   CubeCache *p_cube_cache =
       InferManager::instance().get_cube_cache(engine_name().c_str());
   if (p_cube_cache != nullptr) {
+    // LOG(INFO) << "get cube cache success. model: " << engine_name();
     for (size_t i = 0; i < unique_keys_count; ++i) {
       rec::mcube::CubeValue *hit_val = p_cube_cache->get_data(unique_keys[i]);
       if (hit_val) {
@@ -148,7 +149,7 @@ int GeneralDistKVInferOp::inference() {
       }
     }
   } else {
-    LOG(WARNING) << "get cube cache fail. model: " << engine_name();
+    LOG(INFO) << "get cube cache fail. model: " << engine_name();
   }
   // clear unique keys which hit caches
   if (hit_counts > 0) {
@@ -162,19 +163,34 @@ int GeneralDistKVInferOp::inference() {
     }
   }
   int64_t seek_cache_end = timeline.TimeStampUS();
-  VLOG(2) << "cache hit " << hit_counts
+  LOG(INFO) << "cache hit " << hit_counts
           << " keys in cube cache, last unique_keys:" << unique_keys.size()
           << " , seek_time:" << seek_cache_end - seek_cache_start;
 
   // seek sparse params
   rec::mcube::CubeAPI *cube = rec::mcube::CubeAPI::instance();
   std::vector<std::string> table_names = cube->get_table_names();
+  std::vector<std::string> partiton_paths = cube->get_partition_paths();
+
+  std::unordered_map<uint64_t, uint64_t> keys2server;
+  std::ifstream afile(partiton_paths[0]);
+  if (!afile.is_open()) {
+    LOG(ERROR) << "open conf file [" << partiton_paths[0] << "]";
+    return -1;
+  }
+  while (!afile.eof()) {
+      uint64_t data;
+      uint64_t part;
+      afile >> data;
+      afile >> part;
+      keys2server[data] = part;
+  }
   if (table_names.size() == 0) {
     LOG(ERROR) << "cube init error or cube config not given.";
     return -1;
   }
   int64_t seek_start = timeline.TimeStampUS();
-  int ret = cube->seek(table_names[0], unique_keys, &values);
+  int ret = cube->seek(table_names[0], unique_keys, &values, keys2server);
   int64_t seek_end = timeline.TimeStampUS();
   VLOG(2) << "(logid=" << log_id << ") cube seek status: " << ret
           << " , unique_key: " << unique_keys.size()

@@ -55,6 +55,8 @@ struct MetaInfo {
   }
 
   std::string dict_name;
+  std::string partition_path;
+  std::string hot_path;
   int shard_num;
   int dup_num;
   std::vector<::brpc::Channel*> cube_conn;
